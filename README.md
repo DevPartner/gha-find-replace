@@ -107,7 +107,7 @@ jobs:
           exclude: "**/*.py" # Do not modify Python files
 ```
 
-### Pushing changes back
+### Commit and Pushing changes back
 
 Any modifications during a GitHub Actions workflow are only made to the working copy checked out by the `actions/checkout` step. If you want those changes to be pushed back to the repository you'll need to add a final step that does this.
 
@@ -120,12 +120,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Find and Replace
+        id: findReplace
         uses: jacobtomlinson/gha-find-replace@v2
         with:
           find: "hello"
           replace: "world"
           regex: false
+      - name: Commit files
+        if: steps.findReplace.outputs.modifiedFiles > 0
+        run: |
+         git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+         git config --local user.name "github-actions[bot]"
+         git commit -m 'Replace href="any_url_path.html"->href="any_url_path"' -a             
       - name: Push changes
+        if: steps.findReplace.outputs.modifiedFiles > 0
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
